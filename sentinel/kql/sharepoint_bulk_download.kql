@@ -1,0 +1,12 @@
+// METADATA-START
+// id: SOC-DET-020 | mitre: T1567.002, T1530 | nist: DE.CM-7 | iso27001: A.8.16
+// soc2: CC7.2 | severity: critical | data_source: SharePoint Audit
+// METADATA-END
+OfficeActivity
+| where RecordType == 6
+| where Operation in ("FileDownloaded", "FilePreviewed", "FileAccessed")
+| extend FileSizeMB = FileSizeBytes / 1048576.0
+| summarize Downloads = count(), TotalMB = sum(FileSizeMB), Files = dcount(SourceFileName)
+    by UserId, ClientIP, bin(TimeGenerated, 5m)
+| where Downloads > 100 or TotalMB > 100
+| extend AlertSeverity = "Critical"
